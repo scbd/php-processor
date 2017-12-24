@@ -1,0 +1,15 @@
+*.DS_Store
+[Tt]humbs.db
+
+*.sln
+*.suo
+*.user
+.svn/
+
+[Oo]bj/
+[Bb]in
+[Dd]ebug*/
+[Rr]elease*/
+[Pp]ackages/
+
+temp_AssemblyInfo.cs
