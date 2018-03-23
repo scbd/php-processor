@@ -12,6 +12,7 @@ namespace PhpProcessor
 		static Regex JobOpeningID   = new Regex(@"Job Opening ID: \d+ Application Date:");
 		static Regex PageXofY       = new Regex(@"Page\s\d+\sof\s\d+$");
 		static Regex EndsWithColumn = new Regex(@".*:$");
+		static Regex NewPage        = new Regex(@"^");
 
 		static string WorkingDirectory = ".";
         static string Outfilepath  { get { return Path.Combine(WorkingDirectory, "_output.txt"); } }
@@ -99,7 +100,7 @@ namespace PhpProcessor
 
 				List<string> data = Load(sFilePath).ToList();
 
-                if(!data[0].Contains("Job Opening"))
+                if(!data.Take(10).Contains("Personal History Profile for"))
                 {
                     Console.WriteLine("SKIP:       {0} => Probably not a PHP! ", Path.GetFileName(sFilePath));
                     continue;
@@ -126,7 +127,7 @@ namespace PhpProcessor
 				var DateOfBirth        = data.ExtractSection(new Regex(@"^Date of Birth:$"),                  EndsWithColumn);
 				var Nationality        = data.ExtractSection(new Regex(@"^Country of Nationality:$"),         EndsWithColumn);
 				var oGender            = data.ExtractSection(new Regex(@"^Gender:$"),                         EndsWithColumn);
-				var OtherNationalities = data.ExtractSection(new Regex(@"^Other Nationalities \(if any\):$"), EndsWithColumn, new Regex(@"^Address$"));
+				var OtherNationalities = data.ExtractSection(new Regex(@"^Other Nationalities \(if any\):$"), EndsWithColumn, new Regex(@"^Have you taken any legal steps"), new Regex(@"^Address$"));
 
 				var LanguageSection       = data.ExtractSection(new Regex(@"^Languages$"),   new Regex(@"^Read$"), new Regex(@"^UN Training$"));
 				var Languages_Columns     = LanguageSection.SingleOrDefault(o=>o.StartsWith("Language ")).Split(' ').ToList();
@@ -188,22 +189,22 @@ namespace PhpProcessor
 
 			    var Educ1_Obtained      = qEducation1.ExtractSection(new Regex(@"^Degree Obtained: \w+$"),          EndsWithColumn).Select(o=>o.Replace("Degree Obtained: ", "")).ToList(); 
 			    var Educ1_Degree        = qEducation1.ExtractSection(new Regex(@"^Degree obtained:$"),              EndsWithColumn);
-			    var Educ1_FieldOfStudy  = qEducation1.ExtractSection(new Regex(@"^Specialization:$"),               EndsWithColumn);
+			    var Educ1_FieldOfStudy  = qEducation1.ExtractSection(new Regex(@"^Specialization:$"),               EndsWithColumn, new Regex(@"^Title of the degree"));
 			    var Educ1_Title         = qEducation1.ExtractSection(new Regex(@"^Title in English or French:$"),   EndsWithColumn);
 
 			    var Educ2_Obtained      = qEducation2.ExtractSection(new Regex(@"^Degree Obtained: \w+$"),          EndsWithColumn).Select(o=>o.Replace("Degree Obtained: ", "")).ToList(); 
 			    var Educ2_Degree        = qEducation2.ExtractSection(new Regex(@"^Degree obtained:$"),              EndsWithColumn);
-			    var Educ2_FieldOfStudy  = qEducation2.ExtractSection(new Regex(@"^Specialization:$"),               EndsWithColumn);
+			    var Educ2_FieldOfStudy  = qEducation2.ExtractSection(new Regex(@"^Specialization:$"),               EndsWithColumn, new Regex(@"^Title of the degree"));
 			    var Educ2_Title         = qEducation2.ExtractSection(new Regex(@"^Title in English or French:$"),   EndsWithColumn);
 
 			    var Educ3_Obtained      = qEducation3.ExtractSection(new Regex(@"^Degree Obtained: \w+$"),          EndsWithColumn).Select(o=>o.Replace("Degree Obtained: ", "")).ToList(); 
 			    var Educ3_Degree        = qEducation3.ExtractSection(new Regex(@"^Degree obtained:$"),              EndsWithColumn);
-			    var Educ3_FieldOfStudy  = qEducation3.ExtractSection(new Regex(@"^Specialization:$"),               EndsWithColumn);
+			    var Educ3_FieldOfStudy  = qEducation3.ExtractSection(new Regex(@"^Specialization:$"),               EndsWithColumn, new Regex(@"^Title of the degree"));
 			    var Educ3_Title         = qEducation3.ExtractSection(new Regex(@"^Title in English or French:$"),   EndsWithColumn);
 
 			    var Educ4_Obtained      = qEducation4.ExtractSection(new Regex(@"^Degree Obtained: \w+$"),          EndsWithColumn).Select(o=>o.Replace("Degree Obtained: ", "")).ToList(); 
 			    var Educ4_Degree        = qEducation4.ExtractSection(new Regex(@"^Degree obtained:$"),              EndsWithColumn);
-			    var Educ4_FieldOfStudy  = qEducation4.ExtractSection(new Regex(@"^Specialization:$"),               EndsWithColumn);
+			    var Educ4_FieldOfStudy  = qEducation4.ExtractSection(new Regex(@"^Specialization:$"),               EndsWithColumn, new Regex(@"^Title of the degree"));
 			    var Educ4_Title         = qEducation4.ExtractSection(new Regex(@"^Title in English or French:$"),   EndsWithColumn);
 
 				Write(Filename            );
@@ -303,7 +304,8 @@ namespace PhpProcessor
 		{
 			IEnumerable<string> qLines = File.ReadAllLines(sFilePath, Encoding.UTF8);
 
-			qLines = qLines.Select(o=>o.Trim());
+			qLines = qLines.Where (o=>!NewPage.IsMatch(o));
+			qLines = qLines.Select(o=>o.Trim().Trim(@" /".ToCharArray()).Trim());
 			qLines = qLines.Where (o=>o!="");
 			qLines = qLines.Where (o=>!PageXofY.IsMatch(o));
 			qLines = qLines.Where ((o,i)=>i==0 || !JobOpeningID.IsMatch(o));

@@ -36,7 +36,7 @@ For Windows you can install it from http://www.foolabs.com/xpdf/download.html
 ### Extract information from the PHP text (`*.txt`) into `_output.txt`
 
 ```
-$y PhpProcessor.exe path/to/folder/where/php-txt/files/are
+$ PhpProcessor.exe path/to/folder/where/php-txt/files/are
 ```
 
 
